@@ -206,6 +206,45 @@ python -m yolox.tools.eval -n  yolox-s -c yolox_s.pth -b 1 -d 1 --conf 0.001 --f
 
 </details>
 
+## IEE-EXPO fine-tuning
+
+Use Python 3.10 and an NVIDIA GPU. From this checkout, install the
+dependencies and start a COCO-pretrained variant:
+
+```powershell
+python -m pip install -r requirements.txt
+python tools/train_iee_expo.py --variant yolox-m `
+    --data-dir ..\dataset_iee_exhibition `
+    --checkpoint ..\YOLOX_weights\yolox_m.pth
+python tools/train_iee_expo.py --variant yolox-l `
+    --data-dir ..\dataset_iee_exhibition `
+    --checkpoint ..\YOLOX_weights\yolox_l.pth
+python tools/train_iee_expo.py --variant yolox-x `
+    --data-dir ..\dataset_iee_exhibition `
+    --checkpoint ..\YOLOX_weights\yolox_x.pth
+```
+
+Fresh installs select PyTorch 2.2.2/torchvision 0.17.2 CUDA 11.8 wheels.
+An already installed CPU-only build must be replaced with CUDA before
+training.
+
+The exhibition baseline uses all 268 reviewed images, classes `hole` and
+`groove`, fixed `640x640`, 100 epochs, FP16, EMA, five warmup epochs,
+`no_aug_epochs=15` and zero data-loader workers on Windows. Only the six
+80-to-2-class classification output tensors may be skipped during fine-tune
+loading. Other augmentation and optimizer settings follow YOLOX defaults.
+No validation dataset, AP score, distributed training or NCCL is used.
+GPU checks and three-step smoke tests select batch 8, 4 or 2 according to
+available memory; training does not fall back to CPU. Use `--smoke-only`
+for a smoke test or `--resume PATH_TO_LATEST_CHECKPOINT` to continue a run.
+
+Timestamped runs under `YOLOX_outputs/` contain logs, TensorBoard events,
+resumable latest checkpoints and, only after all epochs complete, the CPU
+FP32 EMA `yolox_m_iee_expo.pth`, `yolox_l_iee_expo.pth` or
+`yolox_x_iee_expo.pth`. Final weights are
+not a validated best model, and training-example predictions do not measure
+generalization. Do not change dependencies while a run is active.
+
 ## Deployment
 
 
