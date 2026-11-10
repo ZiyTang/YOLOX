@@ -18,7 +18,7 @@ def write_json(path, value):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--variant", choices=("yolox-m", "yolox-l", "yolox-x"), default="yolox-l")
+    parser.add_argument("--variant", choices=("yolox-tiny", "yolox-s", "yolox-m", "yolox-l", "yolox-x"), default="yolox-l")
     parser.add_argument("--data-dir", type=Path, default=ROOT.parent / "dataset_iee_exhibition")
     parser.add_argument("--checkpoint", type=Path)
     parser.add_argument("--output-dir", type=Path, default=ROOT / "YOLOX_outputs")
@@ -106,6 +106,8 @@ def main():
                      "peak_allocated_mib": torch.cuda.max_memory_allocated() / 1024 ** 2}
             write_json(run / "smoke.json", smoke)
             chosen = batch
+            input_size = list(trainer.exp.input_size)
+            fp32_no_aug = getattr(trainer.exp, "fp32_no_aug", False)
         except torch.cuda.OutOfMemoryError:
             write_json(run / f"smoke_batch_{batch}_oom.json", {"batch_size": batch, "result": "OUT_OF_MEMORY"})
         finally:
@@ -120,7 +122,8 @@ def main():
         raise RuntimeError(f"{args.variant.upper()} did not fit even at batch size 2.")
     configuration = {"yolox_root": str(ROOT), "data_dir": str(args.data_dir.resolve()),
                      "pretrained_checkpoint": str(args.checkpoint.resolve()), "epochs": args.epochs,
-                     "batch_size": chosen, "input_size": [640, 640], "fp16": True, "ema": True,
+                     "batch_size": chosen, "input_size": input_size, "fp16": True, "ema": True,
+                     "fp32_no_aug": fp32_no_aug,
                      "validation_split": None, "classes": ["hole", "groove"], "seed": 42}
     write_json(run / "training_config.json", configuration)
     if args.smoke_only:

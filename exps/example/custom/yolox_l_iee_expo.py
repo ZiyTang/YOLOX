@@ -59,6 +59,14 @@ class Exp(BaseExp):
                     del checkpoint
                 return super().resume_train(model)
 
+            def before_epoch(self):
+                super().before_epoch()
+                if self.model.head.use_l1 and getattr(self.exp, "fp32_no_aug", False) and self.amp_training:
+                    self.amp_training = False
+                    self.data_type = torch.float32
+                    self.scaler = torch.cuda.amp.GradScaler(enabled=False)
+                    logger.info("Using FP32 for the final L1 phase to avoid FP16 overflow.")
+
             def after_iter(self):
                 if not math.isfinite(float(self.meter["total_loss"].latest)):
                     raise RuntimeError("Non-finite training loss; stopping without publishing final weights.")

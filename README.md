@@ -229,10 +229,14 @@ An already installed CPU-only build must be replaced with CUDA before
 training.
 
 The exhibition baseline uses all 268 reviewed images, classes `hole` and
-`groove`, fixed `640x640`, 100 epochs, FP16, EMA, five warmup epochs,
+`groove`, fixed `640x640` (Tiny: `416x416`), 100 epochs, FP16, EMA, five warmup epochs,
 `no_aug_epochs=15` and zero data-loader workers on Windows. Only the six
 80-to-2-class classification output tensors may be skipped during fine-tune
 loading. Other augmentation and optimizer settings follow YOLOX defaults.
+S uses `--variant yolox-s` with `yolox_s.pth`. Tiny uses `--variant yolox-tiny`
+with `yolox_tiny.pth`; its official Mosaic
+range `(0.5, 1.5)` and disabled MixUp are retained.
+Tiny/S final L1 phases use FP32 to avoid FP16 overflow.
 No validation dataset, AP score, distributed training or NCCL is used.
 GPU checks and three-step smoke tests select batch 8, 4 or 2 according to
 available memory; training does not fall back to CPU. Use `--smoke-only`
@@ -240,7 +244,7 @@ for a smoke test or `--resume PATH_TO_LATEST_CHECKPOINT` to continue a run.
 
 Timestamped runs under `YOLOX_outputs/` contain logs, TensorBoard events,
 resumable latest checkpoints and, only after all epochs complete, the CPU
-FP32 EMA `yolox_m_iee_expo.pth`, `yolox_l_iee_expo.pth` or
+FP32 EMA `yolox_tiny_iee_expo.pth`, `yolox_s_iee_expo.pth`, `yolox_m_iee_expo.pth`, `yolox_l_iee_expo.pth` or
 `yolox_x_iee_expo.pth`. Final weights are
 not a validated best model, and training-example predictions do not measure
 generalization. Do not change dependencies while a run is active.
